@@ -108,7 +108,7 @@ See the [RKE documentation on private registries]({{<baseurl>}}/rke/latest/en/co
 
 Authorized Cluster Endpoint can be used to directly access the Kubernetes API server, without requiring communication through Rancher.
 
-> ABC
+> ABCDEF
 
 This is enabled by default in Rancher-launched Kubernetes clusters, using the IP of the node with the `controlplane` role and the default Kubernetes self signed certificates.
 

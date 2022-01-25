@@ -8,21 +8,47 @@ aliases:
   - /rancher/v2.5/en/installation/k8s-install/kubernetes-rke
   - /rancher/v2.5/en/installation/ha-server-install 
   - /rancher/v2.5/en/installation/install-rancher-on-k8s/install
+  - /rancher/v2.x/en/installation/install-rancher-on-k8s/
 ---
 
-# Prerequisite
+In this section, you'll learn how to deploy Rancher on a Kubernetes cluster using the Helm CLI.
+
+- [Prerequisites](#prerequisites)
+- [Install the Rancher Helm Chart](#install-the-rancher-helm-chart)
+
+# Prerequisites
+
+- [Kubernetes Cluster](#kubernetes-cluster)
+- [CLI Tools](#cli-tools)
+- [Ingress Controller (Only for Hosted Kubernetes)](#ingress-controller-for-hosted-kubernetes)
+
+### Kubernetes Cluster
 
 Set up the Rancher server's local Kubernetes cluster. 
 
 Rancher can be installed on any Kubernetes cluster. This cluster can use upstream Kubernetes, or it can use one of Rancher's Kubernetes distributions, or it can be a managed Kubernetes cluster from a provider such as Amazon EKS.
 
-> **Note:** To deploy Rancher v2.5 on a hosted Kubernetes cluster such as EKS, GKE, or AKS, you should deploy a compatible Ingress controller first to configure [SSL termination on Rancher.]({{<baseurl>}}/rancher/v2.5/en/installation/install-rancher-on-k8s/#4-choose-your-ssl-configuration).
+For help setting up a Kubernetes cluster, we provide these tutorials:
 
-For the tutorial to install an RKE Kubernetes cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/ha-rke/) For help setting up the infrastructure for a high-availability RKE cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/infrastructure-tutorials/infra-for-ha)
+- **RKE:** For the tutorial to install an RKE Kubernetes cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/ha-rke/) For help setting up the infrastructure for a high-availability RKE cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/infrastructure-tutorials/infra-for-ha)
+- **K3s:** For the tutorial to install a K3s Kubernetes cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/ha-with-external-db) For help setting up the infrastructure for a high-availability K3s cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/infrastructure-tutorials/infra-for-ha-with-external-db)
+- **RKE2:** For the tutorial to install an RKE2 Kubernetes cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/ha-rke2) For help setting up the infrastructure for a high-availability RKE2 cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/infrastructure-tutorials/infra-for-rke2-ha)
+- **Amazon EKS:** For details on how to install Rancher on Amazon EKS, including how to install an ingress so that the Rancher server can be accessed, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/install-rancher-on-k8s/amazon-eks)
+- **AKS:** For details on how to install Rancher with Azure Kubernetes Service, including how to install an ingress so that the Rancher server can be accessed, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/install-rancher-on-k8s/aks)
+- **GKE:** For details on how to install Rancher with Google Kubernetes Engine, including how to install an ingress so that the Rancher server can be accessed, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/install-rancher-on-k8s/gke)
 
-For the tutorial to install a K3s Kubernetes cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/ha-with-external-db) For help setting up the infrastructure for a high-availability K3s cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/infrastructure-tutorials/infra-for-ha-with-external-db)
+### CLI Tools
 
-For the tutorial to install an RKE2 Kubernetes cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/ha-rke2) For help setting up the infrastructure for a high-availability RKE2 cluster, refer to [this page.]({{<baseurl>}}/rancher/v2.5/en/installation/resources/k8s-tutorials/infrastructure-tutorials/infra-for-rke2-ha)
+The following CLI tools are required for setting up the Kubernetes cluster. Please make sure these tools are installed and available in your `$PATH`.
+
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl) - Kubernetes command-line tool.
+- [helm](https://docs.helm.sh/using_helm/#installing-helm) - Package management for Kubernetes. Refer to the [Helm version requirements]({{<baseurl>}}/rancher/v2.5/en/installation/options/helm-version) to choose a version of Helm to install Rancher. Refer to the [instructions provided by the Helm project](https://helm.sh/docs/intro/install/) for your specific platform.
+
+### Ingress Controller (For Hosted Kubernetes)
+
+To deploy Rancher v2.5 on a hosted Kubernetes cluster such as EKS, GKE, or AKS, you should deploy a compatible Ingress controller first to configure [SSL termination on Rancher.](#3-choose-your-ssl-configuration)
+
+For an example of how to deploy an ingress on EKS, refer to [this section.]({{<baseurl>}}/rancher/v2.5/en/installation/install-rancher-on-k8s/amazon-eks/#5-install-an-ingress)
 
 # Install the Rancher Helm Chart
 
@@ -40,25 +66,15 @@ To choose a version of Helm to install Rancher with, refer to the [Helm version 
 
 To set up Rancher,
 
-1. [Install the required CLI tools](#1-install-the-required-cli-tools)
-2. [Add the Helm chart repository](#2-add-the-helm-chart-repository)
-3. [Create a namespace for Rancher](#3-create-a-namespace-for-rancher)
-4. [Choose your SSL configuration](#4-choose-your-ssl-configuration)
-5. [Install cert-manager](#5-install-cert-manager) (unless you are bringing your own certificates, or TLS will be terminated on a load balancer)
-6. [Install Rancher with Helm and your chosen certificate option](#6-install-rancher-with-helm-and-your-chosen-certificate-option)
-7. [Verify that the Rancher server is successfully deployed](#7-verify-that-the-rancher-server-is-successfully-deployed)
-8. [Save your options](#8-save-your-options)
+1. [Add the Helm chart repository](#1-add-the-helm-chart-repository)
+2. [Create a namespace for Rancher](#2-create-a-namespace-for-rancher)
+3. [Choose your SSL configuration](#3-choose-your-ssl-configuration)
+4. [Install cert-manager](#4-install-cert-manager) (unless you are bringing your own certificates, or TLS will be terminated on a load balancer)
+5. [Install Rancher with Helm and your chosen certificate option](#5-install-rancher-with-helm-and-your-chosen-certificate-option)
+6. [Verify that the Rancher server is successfully deployed](#6-verify-that-the-rancher-server-is-successfully-deployed)
+7. [Save your options](#7-save-your-options)
 
-### 1. Install the Required CLI Tools
-
-The following CLI tools are required for setting up the Kubernetes cluster. Please make sure these tools are installed and available in your `$PATH`.
-
-Refer to the [instructions provided by the Helm project](https://helm.sh/docs/intro/install/) for your specific platform.
-
-- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl) - Kubernetes command-line tool.
-- [helm](https://docs.helm.sh/using_helm/#installing-helm) - Package management for Kubernetes. Refer to the [Helm version requirements]({{<baseurl>}}/rancher/v2.5/en/installation/options/helm-version) to choose a version of Helm to install Rancher.
-
-### 2. Add the Helm Chart Repository
+### 1. Add the Helm Chart Repository
 
 Use `helm repo add` command to add the Helm chart repository that contains charts to install Rancher. For more information about the repository choices and which is best for your use case, see [Choosing a Version of Rancher]({{<baseurl>}}/rancher/v2.5/en/installation/install-rancher-on-k8s/chart-options/#helm-chart-repositories).
 
@@ -68,7 +84,7 @@ Use `helm repo add` command to add the Helm chart repository that contains chart
 helm repo add rancher-<CHART_REPO> https://releases.rancher.com/server-charts/<CHART_REPO>
 ```
 
-### 3. Create a Namespace for Rancher
+### 2. Create a Namespace for Rancher
 
 We'll need to define a Kubernetes namespace where the resources created by the Chart should be installed. This should always be `cattle-system`:
 
@@ -76,7 +92,7 @@ We'll need to define a Kubernetes namespace where the resources created by the C
 kubectl create namespace cattle-system
 ```
 
-### 4. Choose your SSL Configuration
+### 3. Choose your SSL Configuration
 
 The Rancher management server is designed to be secure by default and requires SSL/TLS configuration.
 
@@ -95,7 +111,7 @@ There are three recommended options for the source of the certificate used for T
 | Let’s Encrypt                  | `ingress.tls.source=letsEncrypt`  | [yes](#5-install-cert-manager) |
 | Certificates from Files        | `ingress.tls.source=secret`        | no               |
 
-### 5. Install cert-manager
+### 4. Install cert-manager
 
 > You should skip this step if you are bringing your own certificate files (option `ingress.tls.source=secret`), or if you use [TLS termination on an external load balancer]({{<baseurl>}}/rancher/v2.5/en/installation/install-rancher-on-k8s/chart-options/#external-tls-termination). 
 
@@ -108,21 +124,8 @@ This step is only required to use certificates issued by Rancher's generated CA 
 These instructions are adapted from the [official cert-manager documentation](https://cert-manager.io/docs/installation/kubernetes/#installing-with-helm).
 
 ```
-# Install the CustomResourceDefinition resources separately
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.0.4/cert-manager.crds.yaml
-
-# **Important:**
-# If you are running Kubernetes v1.15 or below, you
-# will need to add the `--validate=false` flag to your
-# kubectl apply command, or else you will receive a
-# validation error relating to the
-# x-kubernetes-preserve-unknown-fields field in
-# cert-manager’s CustomResourceDefinition resources.
-# This is a benign error and occurs due to the way kubectl
-# performs resource validation.
-
-# Create the namespace for cert-manager
-kubectl create namespace cert-manager
+# If you have installed the CRDs manually instead of with the `--set installCRDs=true` option added to your Helm install command, you should upgrade your CRD resources before upgrading the Helm chart:
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.1/cert-manager.crds.yaml
 
 # Add the Jetstack Helm repository
 helm repo add jetstack https://charts.jetstack.io
@@ -131,10 +134,10 @@ helm repo add jetstack https://charts.jetstack.io
 helm repo update
 
 # Install the cert-manager Helm chart
-helm install \
-  cert-manager jetstack/cert-manager \
+helm install cert-manager jetstack/cert-manager \
   --namespace cert-manager \
-  --version v1.0.4
+  --create-namespace \
+  --version v1.5.1
 ```
 
 Once you’ve installed cert-manager, you can verify it is deployed correctly by checking the cert-manager namespace for running pods:
@@ -150,7 +153,7 @@ cert-manager-webhook-787858fcdb-nlzsq      1/1     Running   0          2m
 
 {{% /accordion %}}
 
-### 6. Install Rancher with Helm and Your Chosen Certificate Option
+### 5. Install Rancher with Helm and Your Chosen Certificate Option
 
 The exact command to install Rancher differs depending on the certificate configuration.
 
@@ -158,18 +161,20 @@ The exact command to install Rancher differs depending on the certificate config
 {{% tab "Rancher-generated Certificates" %}}
 
 
-The default is for Rancher to generate a CA and uses `cert-manager` to issue the certificate for access to the Rancher server interface.
+The default is for Rancher to generate a self-signed CA, and uses `cert-manager` to issue the certificate for access to the Rancher server interface.
 
 Because `rancher` is the default option for `ingress.tls.source`, we are not specifying `ingress.tls.source` when running the `helm install` command.
 
-- Set the `hostname` to the DNS name you pointed at your load balancer.
+- Set `hostname` to the DNS record that resolves to your load balancer.
+- Set `replicas` to the number of replicas to use for the Rancher Deployment. This defaults to 3; if you have less than 3 nodes in your cluster you should reduce it accordingly.
+- To install a specific Rancher version, use the `--version` flag, example: `--version 2.3.6`.
 - If you are installing an alpha version, Helm requires adding the `--devel` option to the command. 
-- To install a specific Rancher version, use the `--version` flag, example: `--version 2.3.6`
 
 ```
 helm install rancher rancher-<CHART_REPO>/rancher \
   --namespace cattle-system \
-  --set hostname=rancher.my.org
+  --set hostname=rancher.my.org \
+  --set replicas=3
 ```
 
 Wait for Rancher to be rolled out:
@@ -185,17 +190,22 @@ deployment "rancher" successfully rolled out
 
 This option uses `cert-manager` to automatically request and renew [Let's Encrypt](https://letsencrypt.org/) certificates. This is a free service that provides you with a valid certificate as Let's Encrypt is a trusted CA.
 
+>**Note:**: You need to have port 80 open as the HTTP-01 challenge can only be done on port 80.
+
 In the following command,
 
-- `hostname` is set to the public DNS record,
-- `ingress.tls.source` is set to `letsEncrypt`
-- `letsEncrypt.email` is set to the email address used for communication about your certificate (for example, expiry notices)
+- Set `hostname` to the public DNS record that resolves to your load balancer.
+- Set `replicas` to the number of replicas to use for the Rancher Deployment. This defaults to 3; if you have less than 3 nodes in your cluster you should reduce it accordingly.
+- Set `ingress.tls.source` to `letsEncrypt`.
+- Set `letsEncrypt.email` to the email address used for communication about your certificate (for example, expiry notices).
+- To install a specific Rancher version, use the `--version` flag, example: `--version 2.3.6`.
 - If you are installing an alpha version, Helm requires adding the `--devel` option to the command. 
 
 ```
 helm install rancher rancher-<CHART_REPO>/rancher \
   --namespace cattle-system \
   --set hostname=rancher.my.org \
+  --set replicas=3 \
   --set ingress.tls.source=letsEncrypt \
   --set letsEncrypt.email=me@example.org
 ```
@@ -212,27 +222,30 @@ deployment "rancher" successfully rolled out
 {{% tab "Certificates from Files" %}}
 In this option, Kubernetes secrets are created from your own certificates for Rancher to use.
 
-When you run this command, the `hostname` option must match the `Common Name` or a `Subject Alternative Names` entry in the server certificate or the Ingress controller will fail to configure correctly.
+When you run this command, the `hostname` option must match the `Common Name` or a `Subject Alternative Names` entry in the server certificate, or the Ingress controller will fail to configure correctly.
 
 Although an entry in the `Subject Alternative Names` is technically required, having a matching `Common Name` maximizes compatibility with older browsers and applications.
 
 > If you want to check if your certificates are correct, see [How do I check Common Name and Subject Alternative Names in my server certificate?]({{<baseurl>}}/rancher/v2.5/en/faq/technical/#how-do-i-check-common-name-and-subject-alternative-names-in-my-server-certificate)
 
-- Set the `hostname`.
+- Set `hostname` as appropriate for your certificate, as described above.
+- Set `replicas` to the number of replicas to use for the Rancher Deployment. This defaults to 3; if you have less than 3 nodes in your cluster you should reduce it accordingly.
 - Set `ingress.tls.source` to `secret`.
+- To install a specific Rancher version, use the `--version` flag, example: `--version 2.3.6`.
 - If you are installing an alpha version, Helm requires adding the `--devel` option to the command. 
 
 ```
 helm install rancher rancher-<CHART_REPO>/rancher \
   --namespace cattle-system \
   --set hostname=rancher.my.org \
+  --set replicas=3 \
   --set ingress.tls.source=secret
 ```
 
 If you are using a Private CA signed certificate , add `--set privateCA=true` to the command:
 
 ```
-helm install rancher rancher-latest/rancher \
+helm install rancher rancher-<CHART_REPO>/rancher \
   --namespace cattle-system \
   --set hostname=rancher.my.org \
   --set ingress.tls.source=secret \
@@ -249,10 +262,10 @@ The Rancher chart configuration has many options for customizing the installatio
 - [Private Docker Image Registry]({{<baseurl>}}/rancher/v2.5/en/installation/install-rancher-on-k8s/chart-options/#private-registry-and-air-gap-installs)
 - [TLS Termination on an External Load Balancer]({{<baseurl>}}/rancher/v2.5/en/installation/install-rancher-on-k8s/chart-options/#external-tls-termination)
 
-See the [Chart Options]({{<baseurl>}}/rancher/v2.5/en/installation/resources/chart-options/) for the full list of options.
+See the [Chart Options]({{<baseurl>}}/rancher/v2.5/en/installation/install-rancher-on-k8s/chart-options/) for the full list of options.
 
 
-### 7. Verify that the Rancher Server is Successfully Deployed
+### 6. Verify that the Rancher Server is Successfully Deployed
 
 After adding the secrets, check if Rancher was rolled out successfully:
 
@@ -272,7 +285,7 @@ rancher   3         3         3            3           3m
 
 It should show the same count for `DESIRED` and `AVAILABLE`.
 
-### 8. Save Your Options
+### 7. Save Your Options
 
 Make sure you save the `--set` options you used. You will need to use the same options when you upgrade Rancher to new versions with Helm.
 

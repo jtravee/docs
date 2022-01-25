@@ -4,6 +4,7 @@ description: Learn how to install Rancher in development and production environm
 weight: 3
 aliases:
   - /rancher/v2.5/en/installation/how-ha-works/
+  - /rancher/v2.x/en/installation/
 ---
 
 This section provides an overview of the architecture options of installing Rancher, describing advantages of each option.
@@ -45,6 +46,10 @@ RancherD is a single binary that first launches an RKE2 Kubernetes cluster, then
 In both the RancherD install and the Helm CLI install, Rancher is installed as a Helm chart on a Kubernetes cluster.
 
 Configuration and upgrading are also simplified with RancherD. When you upgrade the RancherD binary, both the Kubernetes cluster and the Rancher Helm chart are upgraded.
+
+### Automated Quickstart to Deploy Rancher on Amazon EKS
+
+Rancher and Amazon Web Services collaborated on a quick start guide for deploying Rancher on an EKS Kubernetes cluster following AWS best practices. The deployment guide is [here.](https://aws-quickstart.github.io/quickstart-eks-rancher/)
 
 ### Single-node Kubernetes Install
 

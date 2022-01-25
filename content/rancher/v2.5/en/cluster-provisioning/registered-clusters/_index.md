@@ -3,27 +3,33 @@ title: Registering Existing Clusters
 weight: 6
 aliases:
   - /rancher/v2.5/en/cluster-provisioning/imported-clusters
+  - /rancher/v2.x/en/cluster-provisioning/imported-clusters/
+  - /rancher/v2.x/en/cluster-provisioning/registered-clusters/
 ---
-
-_Available as of v2.5_
 
 The cluster registration feature replaced the feature to import clusters.
 
 The control that Rancher has to manage a registered cluster depends on the type of cluster. For details, see [Management Capabilities for Registered Clusters.](#management-capabilities-for-registered-clusters)
 
-Registering EKS clusters now provides additional benefits.
-
 - [Prerequisites](#prerequisites)
 - [Registering a Cluster](#registering-a-cluster)
 - [Management Capabilities for Registered Clusters](#management-capabilities-for-registered-clusters)
-  - [Features for All Registered Clusters](#features-for-all-registered-clusters)
-  - [Additional Features for Registered K3s Clusters](#additional-features-for-registered-k3s-clusters)
-  - [Additional Features for Registered EKS Clusters](#additional-features-for-registered-eks-clusters)
 - [Configuring K3s Cluster Upgrades](#configuring-k3s-cluster-upgrades)
 - [Debug Logging and Troubleshooting for Registered K3s Clusters](#debug-logging-and-troubleshooting-for-registered-k3s-clusters)
 - [Annotating Registered Clusters](#annotating-registered-clusters)
 
 # Prerequisites
+
+{{% tabs %}}
+{{% tab "v2.5.9+" %}}
+
+### Kubernetes Node Roles
+
+Registered RKE Kubernetes clusters must have all three node roles - etcd, controlplane and worker. A cluster with only controlplane components cannot be registered in Rancher.
+
+For more information on RKE node roles, see the [best practices.]({{<baseurl>}}/rancher/v2.5/en/cluster-provisioning/production/#cluster-architecture)
+
+### Permissions
 
 If your existing Kubernetes cluster already has a `cluster-admin` role defined, you must have this `cluster-admin` privilege to register the cluster in Rancher.
 
@@ -41,10 +47,42 @@ By default, GKE users are not given this privilege, so you will need to run the 
 
 If you are registering a K3s cluster, make sure the `cluster.yml` is readable. It is protected by default. For details, refer to [Configuring a K3s cluster to enable importation to Rancher.](#configuring-a-k3s-cluster-to-enable-registration-in-rancher)
 
+### EKS Clusters
+
+EKS clusters must have at least one managed node group to be imported into Rancher or provisioned from Rancher successfully.
+
+{{% /tab %}}
+{{% tab "Rancher before v2.5.9" %}}
+
+### Permissions
+
+If your existing Kubernetes cluster already has a `cluster-admin` role defined, you must have this `cluster-admin` privilege to register the cluster in Rancher.
+
+In order to apply the privilege, you need to run:
+
+```plain
+kubectl create clusterrolebinding cluster-admin-binding \
+  --clusterrole cluster-admin \
+  --user [USER_ACCOUNT]
+```
+
+before running the `kubectl` command to register the cluster.
+
+By default, GKE users are not given this privilege, so you will need to run the command before registering GKE clusters. To learn more about role-based access control for GKE, please click [here](https://cloud.google.com/kubernetes-engine/docs/how-to/role-based-access-control).
+
+If you are registering a K3s cluster, make sure the `cluster.yml` is readable. It is protected by default. For details, refer to [Configuring a K3s cluster to enable importation to Rancher.](#configuring-a-k3s-cluster-to-enable-registration-in-rancher)
+
+### EKS Clusters
+
+EKS clusters must have at least one managed node group to be imported into Rancher or provisioned from Rancher successfully.
+
+{{% /tab %}}
+{{% /tabs %}}
+
 # Registering a Cluster
 
 1. From the **Clusters** page, click **Add Cluster**.
-2. Choose **Register**.
+2. Under **Register an existing Kubernetes cluster**, click the type of Kubernetes cluster you want to register.
 3. Enter a **Cluster Name**.
 4. Use **Member Roles** to configure user authorization for the cluster. Click **Add Member** to add users that can access the cluster. Use the **Role** drop-down to set permissions for each user.
 5. For Rancher v2.5.6+, use **Agent Environment Variables** under **Cluster Options** to set environment variables for [rancher cluster agent]({{<baseurl>}}/rancher/v2.5/en/cluster-provisioning/rke-clusters/rancher-agents/). The environment variables can be set using key value pairs. If rancher agent requires use of proxy to communicate with Rancher server, `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` environment variables can be set using agent environment variables.
@@ -81,21 +119,104 @@ The option can also be specified using the environment variable `K3S_KUBECONFIG_
 $ curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -s -
 ```
 
+### Configuring an Imported EKS Cluster with Terraform
+
+You should define **only** the minimum fields that Rancher requires when importing an EKS cluster with Terraform. This is important as Rancher will overwrite what was in the EKS cluster with any config that the user has provided. 
+
+>**Warning:** Even a small difference between the current EKS cluster and a user-provided config could have unexpected results.
+
+The minimum config fields required by Rancher to import EKS clusters with Terraform using `eks_config_v2` are as follows:
+
+- cloud_credential_id
+- name
+- region
+- imported (this field should always be set to `true` for imported clusters)
+
+Example YAML configuration for imported EKS clusters:
+
+```
+resource "rancher2_cluster" "my-eks-to-import" {
+  name        = "my-eks-to-import"
+  description = "Terraform EKS Cluster"
+  eks_config_v2 {
+    cloud_credential_id = rancher2_cloud_credential.aws.id
+    name                = var.aws_eks_name
+    region              = var.aws_region
+    imported            = true
+  }
+}
+```
+
 # Management Capabilities for Registered Clusters
 
 The control that Rancher has to manage a registered cluster depends on the type of cluster.
 
+{{% tabs %}}
+{{% tab "Rancher v2.5.8+" %}}
+
+- [Changes in v2.5.8](#changes-in-v2-5-8)
+- [Features for All Registered Clusters](#2-5-8-features-for-all-registered-clusters)
+- [Additional Features for Registered K3s Clusters](#2-5-8-additional-features-for-registered-k3s-clusters)
+- [Additional Features for Registered EKS and GKE Clusters](#additional-features-for-registered-eks-and-gke-clusters)
+
+### Changes in v2.5.8
+
+Greater management capabilities are now available for [registered GKE clusters.](#additional-features-for-registered-eks-and-gke-clusters) The same configuration options are available for registered GKE clusters as for the GKE clusters created through the Rancher UI.
+
+<a id="2-5-8-features-for-all-registered-clusters"></a>
 ### Features for All Registered Clusters
 
 After registering a cluster, the cluster owner can:
 
 - [Manage cluster access]({{<baseurl>}}/rancher/v2.5/en/admin-settings/rbac/cluster-project-roles/) through role-based access control
-- Enable [monitoring, alerts and notifiers]({{<baseurl>}}/rancher/v2.5/en/monitoring-alerting/v2.5/)
+- Enable [monitoring, alerts and notifiers]({{<baseurl>}}/rancher/v2.5/en/monitoring-alerting/)
 - Enable [logging]({{<baseurl>}}/rancher/v2.5/en/logging/v2.5/)
-- Enable [Istio]({{<baseurl>}}/rancher/v2.5/en/istio/v2.5/)
+- Enable [Istio]({{<baseurl>}}/rancher/v2.5/en/istio/)
 - Use [pipelines]({{<baseurl>}}/rancher/v2.5/en/project-admin/pipelines/)
 - Manage projects and workloads
 
+<a id="2-5-8-additional-features-for-registered-k3s-clusters"></a>
+### Additional Features for Registered K3s Clusters
+
+[K3s]({{<baseurl>}}/k3s/latest/en/) is a lightweight, fully compliant Kubernetes distribution.
+
+When a K3s cluster is registered in Rancher, Rancher will recognize it as K3s. The Rancher UI will expose the features for [all registered clusters,](#features-for-all-registered-clusters) in addition to the following features for editing and upgrading the cluster:
+
+- The ability to [upgrade the K3s version]({{<baseurl>}}/rancher/v2.5/en/cluster-admin/upgrading-kubernetes/)
+- The ability to configure the maximum number of nodes that will be upgraded concurrently
+- The ability to see a read-only version of the K3s cluster's configuration arguments and environment variables used to launch each node in the cluster
+
+### Additional Features for Registered EKS and GKE Clusters
+
+Registering an Amazon EKS cluster or GKE cluster allows Rancher to treat it as though it were created in Rancher.
+
+Amazon EKS clusters and GKE clusters can now be registered in Rancher. For the most part, these registered clusters are treated the same way as clusters created in the Rancher UI, except for deletion.
+
+When you delete an EKS cluster or GKE cluster that was created in Rancher, the cluster is destroyed. When you delete a cluster that was registered in Rancher, it is disconnected from the Rancher server, but it still exists and you can still access it in the same way you did before it was registered in Rancher.
+
+The capabilities for registered clusters are listed in the table on [this page.]({{<baseurl>}}/rancher/v2.5/en/cluster-provisioning/)
+
+
+{{% /tab %}}
+{{% tab "Rancher before v2.5.8" %}}
+
+- [Features for All Registered Clusters](#before-2-5-8-features-for-all-registered-clusters)
+- [Additional Features for Registered K3s Clusters](#before-2-5-8-additional-features-for-registered-k3s-clusters)
+- [Additional Features for Registered EKS Clusters](#additional-features-for-registered-eks-clusters)
+
+<a id="before-2-5-8-features-for-all-registered-clusters"></a>
+### Features for All Registered Clusters
+
+After registering a cluster, the cluster owner can:
+
+- [Manage cluster access]({{<baseurl>}}/rancher/v2.5/en/admin-settings/rbac/cluster-project-roles/) through role-based access control
+- Enable [monitoring, alerts and notifiers]({{<baseurl>}}/rancher/v2.5/en/monitoring-alerting/)
+- Enable [logging]({{<baseurl>}}/rancher/v2.5/en/logging/v2.5/)
+- Enable [Istio]({{<baseurl>}}/rancher/v2.5/en/istio/)
+- Use [pipelines]({{<baseurl>}}/rancher/v2.5/en/project-admin/pipelines/)
+- Manage projects and workloads
+
+<a id="before-2-5-8-additional-features-for-registered-k3s-clusters"></a>
 ### Additional Features for Registered K3s Clusters
 
 [K3s]({{<baseurl>}}/k3s/latest/en/) is a lightweight, fully compliant Kubernetes distribution.
@@ -115,6 +236,10 @@ Amazon EKS clusters can now be registered in Rancher. For the most part, registe
 When you delete an EKS cluster that was created in Rancher, the cluster is destroyed. When you delete an EKS cluster that was registered in Rancher, it is disconnected from the Rancher server, but it still exists and you can still access it in the same way you did before it was registered in Rancher.
 
 The capabilities for registered EKS clusters are listed in the table on [this page.]({{<baseurl>}}/rancher/v2.5/en/cluster-provisioning/)
+{{% /tab %}}
+{{% /tabs %}}
+
+
 
 # Configuring K3s Cluster Upgrades
 

@@ -6,6 +6,7 @@ aliases:
   - /rancher/v2.5/en/installation/options/chart-options/
   - /rancher/v2.5/en/installation/options/helm2/helm-rancher/chart-options/
   - /rancher/v2.5/en/installation/resources/chart-options
+  - /rancher/v2.x/en/installation/install-rancher-on-k8s/chart-options/
 ---
 
 This page is a configuration reference for the Rancher Helm chart.
@@ -48,7 +49,7 @@ For information on enabling experimental features, refer to [this page.]({{<base
 | `auditLog.hostPath`            | "/var/log/rancher/audit"                              | `string` - log file destination on host (only applies when `auditLog.destination` is set to `hostPath`)                                           |
 | `auditLog.level`               | 0                                                     | `int` - set the [API Audit Log]({{<baseurl>}}/rancher/v2.5/en/installation/api-auditing) level. 0 is off. [0-3]                                   |
 | `auditLog.maxAge`              | 1                                                     | `int` - maximum number of days to retain old audit log files (only applies when `auditLog.destination` is set to `hostPath`)                      |
-| `auditLog.maxBackups`          | 1                                                     | `int` - maximum number of audit log files to retain (only applies when `auditLog.destination` is set to `hostPath`)                               |
+| `auditLog.maxBackup`           | 1                                                     | `int` - maximum number of audit log files to retain (only applies when `auditLog.destination` is set to `hostPath`)                               |
 | `auditLog.maxSize`             | 100                                                   | `int` - maximum size in megabytes of the audit log file before it gets rotated (only applies when `auditLog.destination` is set to `hostPath`)    |
 | `busyboxImage`                 | "busybox"                                             | `string` - Image location for busybox image used to collect audit logs                |
 | `certmanager.version`          | ""                                                    | `string` - set cert-manager compatibility                                                                                                         |
@@ -98,14 +99,9 @@ You can set extra environment variables for Rancher server using `extraEnv`. Thi
 
 ### TLS Settings
 
-To set a different TLS configuration, you can use the `CATTLE_TLS_MIN_VERSION` and `CATTLE_TLS_CIPHERS` environment variables. For example, to configure TLS 1.0 as minimum accepted TLS version:
+When you install Rancher inside of a Kubernetes cluster, TLS is offloaded at the cluster's ingress controller. The possible TLS settings depend on the used ingress controller.
 
-```plain
---set 'extraEnv[0].name=CATTLE_TLS_MIN_VERSION'
---set 'extraEnv[0].value=1.0'
-```
-
-See [TLS settings]({{<baseurl>}}/rancher/v2.5/en/admin-settings/tls-settings) for more information and options.
+See [TLS settings]({{<baseurl>}}/rancher/v2.5/en/installation/resources/tls-settings) for more information and options.
 
 ### Import `local` Cluster
 
@@ -128,7 +124,7 @@ To customize or use a different ingress with Rancher server you can set your own
 Example on setting a custom certificate issuer:
 
 ```plain
---set ingress.extraAnnotations.'certmanager\.k8s\.io/cluster-issuer'=ca-key-pair
+--set ingress.extraAnnotations.'cert-manager\.io/cluster-issuer'=issuer-name
 ```
 
 Example on setting a static proxy header with `ingress.configurationSnippet`. This value is parsed like a template so variables can be used.

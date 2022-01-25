@@ -6,6 +6,7 @@ weight: 2225
 aliases:
   - /rancher/v2.5/en/tasks/clusters/creating-a-cluster/create-cluster-custom/
   - /rancher/v2.5/en/cluster-provisioning/custom-clusters/
+  - /rancher/v2.x/en/cluster-provisioning/rke-clusters/custom-nodes/
 ---
 
 When you create a custom cluster, Rancher uses RKE (the Rancher Kubernetes Engine) to create a Kubernetes cluster in on-prem bare-metal servers, on-prem virtual machines, or in any node hosted by an infrastructure provider.
@@ -42,6 +43,8 @@ Provision the host according to the [installation requirements]({{<baseurl>}}/ra
 
 ### 2. Create the Custom Cluster
 
+Clusters won't begin provisioning until all three node roles (worker, etcd and controlplane) are present.
+
 1. From the **Clusters** page, click **Add Cluster**.
 
 2. Choose **Custom**.
@@ -58,7 +61,7 @@ Provision the host according to the [installation requirements]({{<baseurl>}}/ra
     >- The only Network Provider available for clusters with Windows support is Flannel.
 6.	<a id="step-6"></a>Click **Next**.
 
-7.	From **Node Role**, choose the roles that you want filled by a cluster node.
+7.	From **Node Role**, choose the roles that you want filled by a cluster node. You must provision at least one node for each role: `etcd`, `worker`, and `control plane`. All three roles are required for a custom cluster to finish provisioning. For more information on roles, see [this section.]({{<baseurl>}}/rancher/v2.5/en/overview/concepts/#roles-for-nodes-in-kubernetes-clusters)
 
 	>**Notes:**
 	>
@@ -96,7 +99,7 @@ If you have configured your cluster to use Amazon as **Cloud Provider**, tag you
 >**Note:** You can use Amazon EC2 instances without configuring a cloud provider in Kubernetes. You only have to configure the cloud provider if you want to use specific Kubernetes cloud provider functionality. For more information, see [Kubernetes Cloud Providers](https://kubernetes.io/docs/concepts/cluster-administration/cloud-providers/)
 
 
-The following resources need to tagged with a `ClusterID`:
+The following resources need to be tagged with a `ClusterID`:
 
 - **Nodes**: All hosts added in Rancher.
 - **Subnet**: The subnet used for your cluster

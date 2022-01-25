@@ -2,6 +2,8 @@
 title: How to Configure In-tree vSphere Cloud Provider
 shortTitle: In-tree Cloud Provider
 weight: 10
+aliases:
+  - /rancher/v2.x/en/cluster-provisioning/rke-clusters/cloud-providers/vsphere/in-tree/
 ---
 >**Note:** The in tree provider will be disabled and removed gradually from k8s version 1.21 through 1.25.  We recommend moving to the out of tree provider.
 

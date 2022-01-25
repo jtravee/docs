@@ -3,11 +3,17 @@ title: Backing up Rancher
 weight: 1
 aliases:
   - /rancher/v2.5/en/backups/v2.5/back-up-rancher
+  - /rancher/v2.x/en/backups/
+  - /rancher/v2.x/en/backups/v2.5/back-up-rancher/
 ---
 
-In this section, you'll learn how to back up Rancher running on any Kubernetes cluster. To backup Rancher installed with Docker, refer the instructions for [single node backups]({{<baseurl>}}/rancher/v2.5/en/backups/v2.5/docker-installs/docker-backups)
+In this section, you'll learn how to back up Rancher running on any Kubernetes cluster. To backup Rancher installed with Docker, refer to the instructions for [single node backups]({{<baseurl>}}/rancher/v2.5/en/backups/v2.5/docker-installs/docker-backups).
 
 The backup-restore operator needs to be installed in the local cluster, and only backs up the Rancher app. The backup and restore operations are performed only in the local Kubernetes cluster.
+
+Note that the rancher-backup operator version 1.x.x is for Rancher v2.5.x.
+
+> When restoring a backup into a new Rancher setup, the version of the new setup should be the same as the one where the backup is made. The Kubernetes version should also be considered when restoring a backup, since the supported apiVersion in the cluster and in the backup file could be different.
 
 ### Prerequisites
 
@@ -24,6 +30,8 @@ Backups are created as .tar.gz files. These files can be pushed to S3 or Minio, 
 1. Click **Rancher Backups.**
 1. Configure the default storage location. For help, refer to the [storage configuration section.](../configuration/storage-config)
 
+>**NOTE:** There are two known issues in Fleet that occur after performing a restoration using the backup-restore-operator: Fleet agents are inoperable and clientSecretName and helmSecretName are not included in Fleet gitrepos. Refer [here]({{<baseurl>}}/rancher/v2.5/en/deploy-across-clusters/fleet/#troubleshooting) for workarounds.
+
 ### 2. Perform a Backup
 
 To perform a backup, a custom resource of type Backup must be created.
@@ -32,7 +40,7 @@ To perform a backup, a custom resource of type Backup must be created.
 1. Click **Backup.**
 1. Create the Backup with the form, or with the YAML editor.
 1. For configuring the Backup details using the form, click **Create** and refer to the [configuration reference](../configuration/backup-config) and to the [examples.](../examples/#backup)
-1. For using the YAML editor, we can click **Create > Create from YAML.** Enter the Backup YAML. This example Backup custom resource would create encrypted recurring backups in S3:
+1. For using the YAML editor, we can click **Create > Create from YAML.** Enter the Backup YAML. This example Backup custom resource would create encrypted recurring backups in S3. The app uses the `credentialSecretNamespace` value to determine where to look for the S3 backup secret:
 
     ```yaml
     apiVersion: resources.cattle.io/v1

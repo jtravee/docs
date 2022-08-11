@@ -147,7 +147,8 @@ You will need to set additional configuration for your hardened cluster environm
 1. In the left navigation bar, click **Apps & Marketplace**.
 1. Install (or upgrade to) NeuVector version `100.0.1+up2.2.2`.
 
-   - Under **Edit Options** > **Other Configuration**, enable **Pod Security Policy** by checking the box. Note that  you must also enter a value greater than `zero` for `Manager runAsUser ID`, `Scanner runAsUser ID`, and `Updater runAsUser ID`:
+   - Under **Edit Options** > **Other Configuration**, enable **Pod Security Policy** by checking the box. Note that
+   you must also enter a value greater than `zero` for `Manager runAsUser ID`, `Scanner runAsUser ID`, and `Updater runAsUser ID`:
 
      ![Enable PSP for RKE2 and K3s Hardened Clusters]({{<baseurl>}}/img/rancher/psp-nv-rke2.png)
 
